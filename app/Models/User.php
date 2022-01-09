@@ -6,9 +6,10 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -18,8 +19,10 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
+        'dob',
         'password',
     ];
 
@@ -33,12 +36,29 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'full_name',
+    ];
+
     /**
      * The attributes that should be cast.
      *
      * @var array<string, string>
      */
     protected $casts = [
+        'dob' => 'datetime:Y-m-d',
         'email_verified_at' => 'datetime',
     ];
+
+    public function setPasswordAttribute($value){
+        $this->attributes['password'] = Hash::make($value);
+    }
+
+    public function getFullNameAttribute(){
+        return $this->first_name.' '.$this->last_name;
+    }
+
+    public function blogs(){
+        return $this->hasMany(Blog::class);
+    }
 }
